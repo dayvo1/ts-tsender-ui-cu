@@ -20,7 +20,7 @@ export default function AirdropForm() {
     const [tokenAddress, setTokenAddress] = useState("")
     const [recipients, setRecipients] = useState("")
     const [amounts, setAmounts] = useState("")
-    const [isClient, setIsClient] = useState(false) // Add this state
+    const [isClient, setIsClient] = useState(false) 
     
     const chainId = useChainId()
     const config = useConfig()
