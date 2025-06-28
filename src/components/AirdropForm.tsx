@@ -20,6 +20,8 @@ export default function AirdropForm() {
     const [tokenAddress, setTokenAddress] = useState("")
     const [recipients, setRecipients] = useState("")
     const [amounts, setAmounts] = useState("")
+    const [isClient, setIsClient] = useState(false) // Add this state
+    
     const chainId = useChainId()
     const config = useConfig()
     const account = useAccount()
@@ -31,7 +33,6 @@ export default function AirdropForm() {
                 abi: erc20Abi,
                 address: tokenAddress as `0x${string}`,
                 functionName: "decimals",
-
             },
             {
                 abi: erc20Abi,
@@ -50,22 +51,28 @@ export default function AirdropForm() {
         }
     })
 
+    // Set client flag and load data only on client
     useEffect(() => {
-        // Load saved data from localStorage
+        setIsClient(true)
+        
+        // Load saved data from localStorage only on client
         try {
             const savedData = localStorage.getItem(STORAGE_KEY)
             if(savedData) {
                 const parsedData: AirDropFormData = JSON.parse(savedData)
-                setTokenAddress(parsedData.tokenAddress || " ")
-                setRecipients(parsedData.recipients || " ")
-                setAmounts(parsedData.amounts || " ")
+                setTokenAddress((parsedData.tokenAddress || "").trim())
+                setRecipients((parsedData.recipients || "").trim())
+                setAmounts((parsedData.amounts || "").trim())
             }
         } catch(error) {
             console.error("Error loading saved data:", error)
         }
     }, [])
 
+    // Save data to localStorage only on client
     useEffect(() => {
+        if (!isClient) return // Don't save on server
+        
         const dataToSave: AirDropFormData = {
             tokenAddress,
             recipients,
@@ -73,12 +80,10 @@ export default function AirdropForm() {
         }
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave)) 
-
         } catch (error) {
             console.error("Error saving data:", error)
         }
-
-    }, [tokenAddress, recipients, amounts])
+    }, [tokenAddress, recipients, amounts, isClient])
 
     async function getApprovedAmount(tSenderAddress: string | null): Promise<number> {
         if (!tSenderAddress){
@@ -126,7 +131,7 @@ export default function AirdropForm() {
                 args: [
                     tokenAddress,
                     recipients.split(/[,\n]+/).map(addr => addr.trim()).filter(addr => addr !== ''),
-                    amounts.split(/[,]\n]+/).map(amt => amt.trim()).filter(amt => amt !== ''),
+                    amounts.split(/[,\n]+/).map(amt => amt.trim()).filter(amt => amt !== ''), // Fixed regex
                     BigInt(total)
                 ]
             })
@@ -140,17 +145,29 @@ export default function AirdropForm() {
                 args: [
                     tokenAddress,
                     recipients.split(/[,\n]+/).map(addr => addr.trim()).filter(addr => addr !== ''),
-                    amounts.split(/[,]\n]+/).map(amt => amt.trim()).filter(amt => amt !== ''),
+                    amounts.split(/[,\n]+/).map(amt => amt.trim()).filter(amt => amt !== ''), // Fixed regex
                     BigInt(total)
                 ]
             })
         }
-        
     }
 
     // Helper function to format token amount
     const formatTokenAmount = (amount: number, decimals: number) => {
-    return (amount / Math.pow(10, decimals)).toFixed(2);
+        return (amount / Math.pow(10, decimals)).toFixed(2);
+    }
+
+    // Show loading state during hydration to prevent mismatch
+    if (!isClient) {
+        return (
+            <div className="animate-pulse">
+                <div className="h-16 bg-gray-700 rounded mb-4"></div>
+                <div className="h-32 bg-gray-700 rounded mb-4"></div>
+                <div className="h-32 bg-gray-700 rounded mb-4"></div>
+                <div className="h-24 bg-gray-700 rounded mb-4"></div>
+                <div className="h-10 bg-gray-700 rounded"></div>
+            </div>
+        )
     }
 
     return (
@@ -207,7 +224,6 @@ export default function AirdropForm() {
                                 ? formatTokenAmount(total, Number(tokenData[0].result))
                                 : "0.00"
                             }   
-                            
                         </span>
                     </div>
                 </div>
@@ -217,8 +233,6 @@ export default function AirdropForm() {
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out">
                 Send Tokens
             </button>
-
-            
         </div>
     )
 }
