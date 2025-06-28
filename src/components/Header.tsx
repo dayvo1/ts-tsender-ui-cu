@@ -6,7 +6,7 @@ export default function Header() {
     <header className="flex items-center justify-between p-4 bg-gray-800 shadow-md">
         <div className="flex items-center gap-4">
             <a
-                href="https://github.com/dayvo1d/TSender"
+                href="https://github.com/dayvo1/ts-tsender-ui-cu"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-gray-600 transition-colors"
