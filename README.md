@@ -9,4 +9,4 @@ function airdropERC20(
     uint256 totalAmount
 )
 ```
-3. Deploy to fleek
+3. Deploy to fleek ✔️
